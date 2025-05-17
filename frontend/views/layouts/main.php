@@ -1,84 +1,98 @@
 <?php
-
-/** @var \yii\web\View $this */
-/** @var string $content */
-
-use common\widgets\Alert;
+use yii\helpers\Html;
+use yii\widgets\Breadcrumbs;
 use frontend\assets\AppAsset;
-use yii\bootstrap5\Breadcrumbs;
-use yii\bootstrap5\Html;
-use yii\bootstrap5\Nav;
-use yii\bootstrap5\NavBar;
 
 AppAsset::register($this);
 ?>
+
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>" class="h-100">
+<html lang="<?= Yii::$app->language ?>">
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <?php $this->registerCsrfMetaTags() ?>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?= Html::csrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
+
+    <style>
+        body {
+            margin: 0;
+        }
+        .sidebar {
+            background-color: #6f42c1;
+            min-height: 100vh;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: white;
+            display: block;
+            padding: 10px 20px;
+            text-decoration: none;
+        }
+        .sidebar a:hover {
+            background-color: #59339c;
+            text-decoration: none;
+        }
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .navbar {
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body class="d-flex flex-column h-100">
+<body>
 <?php $this->beginBody() ?>
 
-<header>
-    <?php
-    NavBar::begin([
-        'brandLabel' => Yii::$app->name,
-        'brandUrl' => Yii::$app->homeUrl,
-        'options' => [
-            'class' => 'navbar navbar-expand-md navbar-dark bg-dark fixed-top',
-        ],
-    ]);
-    $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
-        ['label' => 'About', 'url' => ['/site/about']],
-        ['label' => 'Contact', 'url' => ['/site/contact']],
-    ];
-    if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Signup', 'url' => ['/site/signup']];
-    }
-
-    echo Nav::widget([
-        'options' => ['class' => 'navbar-nav me-auto mb-2 mb-md-0'],
-        'items' => $menuItems,
-    ]);
-    if (Yii::$app->user->isGuest) {
-        echo Html::tag('div',Html::a('Login',['/site/login'],['class' => ['btn btn-link login text-decoration-none']]),['class' => ['d-flex']]);
-    } else {
-        echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
-            . Html::submitButton(
-                'Logout (' . Yii::$app->user->identity->username . ')',
-                ['class' => 'btn btn-link logout text-decoration-none']
-            )
-            . Html::endForm();
-    }
-    NavBar::end();
-    ?>
-</header>
-
-<main role="main" class="flex-shrink-0">
-    <div class="container">
-        <?= Breadcrumbs::widget([
-            'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
-        ]) ?>
-        <?= Alert::widget() ?>
-        <?= $content ?>
+<!-- Top Navbar -->
+<nav class="navbar navbar-light bg-white border-bottom px-4 d-flex justify-content-between align-items-center">
+    <div>
+        <h5 class="mb-0">Flyer Archive</h5>
     </div>
-</main>
-
-<footer class="footer mt-auto py-3 text-muted">
-    <div class="container">
-        <p class="float-start">&copy; <?= Html::encode(Yii::$app->name) ?> <?= date('Y') ?></p>
-        <p class="float-end"><?= Yii::powered() ?></p>
+    <div>
+        <?php if (!Yii::$app->user->isGuest): ?>
+            <?= Html::beginForm(['/site/logout'], 'post', ['class' => 'd-inline']) ?>
+                <span class="mr-2">Logout (<?= Html::encode(Yii::$app->user->identity->username) ?>)</span>
+                <?= Html::submitButton('Logout', ['class' => 'btn btn-sm btn-outline-danger']) ?>
+            <?= Html::endForm() ?>
+        <?php endif; ?>
     </div>
-</footer>
+</nav>
+
+<!-- Sidebar + Content -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-none d-md-block sidebar">
+            <div class="sidebar-sticky">
+                <a href="<?= Yii::$app->homeUrl ?>">Dashboard</a>
+                <a href="<?= \yii\helpers\Url::to(['flyers/index']) ?>">Flyer Archive</a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ml-sm-auto main-content">
+             <?= Breadcrumbs::widget([
+                        'links' => $this->params['breadcrumbs'] ?? [],
+                        'options' => ['class' => 'breadcrumb float-sm-right'],
+                        'itemTemplate' => "<li class=\"breadcrumb-item\">{link}</li>\n",
+                        'activeItemTemplate' => "<li class=\"breadcrumb-item active\">{link}</li>\n",
+                        'homeLink' => [
+                            'label' => 'Home',
+                            'url' => Yii::$app->homeUrl,
+                        ],
+                    ]) ?>
+            <?= $content ?>
+        </main>
+    </div>
+</div>
 
 <?php $this->endBody() ?>
 </body>
 </html>
-<?php $this->endPage();
+<?php $this->endPage() ?>

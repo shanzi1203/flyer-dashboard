@@ -75,6 +75,10 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+         if (Yii::$app->user->isGuest) {
+        return $this->redirect(['site/login']);
+    }
+
         return $this->render('index');
     }
 
@@ -88,10 +92,26 @@ class SiteController extends Controller
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
+        $this->layout = 'loginlayout';
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+            $userId = Yii::$app->user->id;
+            $auth = Yii::$app->authManager;
+            if ($auth->checkAccess($userId, 'admin')) {
+                $currentBaseUrl = Yii::$app->request->baseUrl;
+                $host = Yii::$app->request->hostInfo;
+                $backendBaseUrl = str_replace('/frontend/web', '/backend/web', $currentBaseUrl);
+                $backendUrl = $host . $backendBaseUrl . '/site/index';
+
+                return $this->redirect($backendUrl);
+            } elseif ($auth->checkAccess($userId, 'client')) {
+                return $this->redirect(['/site/index']);
+            } else {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', 'Unauthorized role');
+                return $this->goHome();
+            }
         }
 
         $model->password = '';
@@ -110,7 +130,7 @@ class SiteController extends Controller
     {
         Yii::$app->user->logout();
 
-        return $this->goHome();
+        return $this->redirect(['login']);
     }
 
     /**
@@ -153,9 +173,11 @@ class SiteController extends Controller
      */
     public function actionSignup()
     {
+        $this->layout = 'loginlayout';
         $model = new SignupForm();
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
+           
+            Yii::$app->session->setFlash('success', 'Thank you for registration.');
             return $this->goHome();
         }
 
